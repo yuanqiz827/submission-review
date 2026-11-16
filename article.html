@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}{{ '新增稿件' if new else article.title }} · 投稿審查系統{% endblock %}
+{% block page_class %}reading-width{% endblock %}
+{% block content %}
+  <a class="back-link" href="{{ url_for('index') }}">← 返回清單</a>
+  <div class="heading-row"><h1>{{ '新增稿件' if new else ('修改稿件' if editable else '稿件內容') }}</h1><span class="status {{ article.status }}">{{ status_labels[article.status] }}</span></div>
+  <p class="intro">作者：{{ article.author_name }}{% if not new %}　稿件編號：#{{ article.id }}{% endif %}</p>
+  {% if editable %}
+    <form method="post" class="editor-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="field"><label for="category">類別 <span class="label-note">最多 40 字</span></label><input id="category" name="category" list="categories" maxlength="40" value="{{ article.category }}" required><datalist id="categories"><option value="校園生活"><option value="資訊科技"><option value="文學創作"><option value="其他"></datalist></div>
+      <div class="field"><label for="title">標題 <span class="label-note">最多 200 字</span></label><input id="title" name="title" maxlength="200" value="{{ article.title }}" required></div>
+      <div class="field"><label for="content">文章內容</label><textarea id="content" name="content" rows="12" required>{{ article.content }}</textarea></div>
+      <div class="form-actions"><button type="submit">儲存為編輯中</button><a class="button secondary" href="{{ url_for('index') }}">取消</a></div>
+      <p class="muted">儲存後回到清單，再按「送出投稿」進入審查。</p>
+    </form>
+  {% else %}
+    <article class="article-body"><p class="eyebrow">{{ article.category }}</p><h2>{{ article.title }}</h2><div class="article-content">{{ article.content }}</div></article>
+    {% if user.role == 'editor' %}
+    <div class="review-actions">
+      <p>閱讀完成後，請選擇審查結果。</p>
+      <div class="form-actions">
+        <form method="post" action="{{ url_for('article_action', article_id=article.id, action='approve') }}" onsubmit="return confirm('確定通過這篇稿件？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">通過稿件</button></form>
+        <form method="post" action="{{ url_for('article_action', article_id=article.id, action='return') }}" onsubmit="return confirm('確定退回給作者修改？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary">退回修改</button></form>
+      </div>
+    </div>
+    {% else %}<p class="muted">{{ '稿件已送出，等待編輯審查。退回後才能修改。' if article.status == 'reviewing' else '稿件已通過審查，目前為唯讀。' }}</p>{% endif %}
+  {% endif %}
+{% endblock %}

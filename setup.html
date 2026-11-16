@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}連線設定 · 投稿審查系統{% endblock %}
+{% block page_class %}narrow{% endblock %}
+{% block content %}
+  <p class="eyebrow">開始使用</p>
+  <h1>連線至 PostgreSQL</h1>
+  <p class="intro">輸入你原本的資料庫設定，即可繼續使用已儲存的稿件。</p>
+  {% if error %}<div class="notice error" role="alert"><strong>連線未完成</strong><pre>{{ error }}</pre><p>請確認服務已啟動、帳號密碼及連接埠正確。資料庫不存在時，使用下方「首次建立資料庫」。</p></div>{% endif %}
+  <form method="post" class="editor-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="two-columns">
+      <div class="field"><label for="host">伺服器</label><input id="host" name="host" value="{{ values.host }}" required></div>
+      <div class="field"><label for="port">連接埠</label><input id="port" name="port" type="number" min="1" max="65535" value="{{ values.port }}" required></div>
+    </div>
+    <div class="field"><label for="dbname">資料庫名稱</label><input id="dbname" name="dbname" value="{{ values.dbname }}" required></div>
+    <div class="field"><label for="user">資料庫帳號</label><input id="user" name="user" value="{{ values.user }}" autocomplete="username" required></div>
+    <div class="field"><label for="password">資料庫密碼</label><input id="password" name="password" type="password" autocomplete="current-password"><small>使用安裝 PostgreSQL 時設定的密碼，只保留在本次伺服器記憶體中。</small></div>
+    <div class="form-actions">
+      <button type="submit" name="mode" value="connect">連線並開啟系統</button>
+      <button type="submit" name="mode" value="create" class="secondary">首次建立資料庫</button>
+    </div>
+    <p class="muted">原本已成功使用過系統，直接連線即可。首次建立資料庫需要 CREATEDB 權限。</p>
+  </form>
+{% endblock %}

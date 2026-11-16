@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}投稿審查系統{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="{{ url_for('index') }}">投稿審查系統</a>
+      <span class="header-note">期中個人專題</span>
+      <a class="header-link" href="{{ url_for('setup') }}">資料庫連線設定</a>
+    </div>
+  </header>
+  <main class="page {% block page_class %}{% endblock %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="notice {{ category }}" role="status">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">投稿、退回修改與審查通過</footer>
+</body>
+</html>

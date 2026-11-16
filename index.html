@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="identity-bar" aria-label="切換操作身分">
+    <form method="post" action="{{ url_for('identity') }}" class="identity-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="identity">操作身分</label>
+      <select id="identity" name="user_id">
+        {% for person in users %}<option value="{{ person.id }}" {% if person.id == user.id %}selected{% endif %}>{{ person.display_name }}（{{ '作者' if person.role == 'author' else '編輯' }}）</option>{% endfor %}
+      </select>
+      <button type="submit" class="secondary">切換身分</button>
+    </form>
+    <p class="muted">展示模式：透過選單切換角色，未設登入驗證。</p>
+  </section>
+  <div class="heading-row">
+    <div><p class="eyebrow">{{ user.display_name }}</p><h1>{{ '我的投稿' if user.role == 'author' else '待審查稿件' }}</h1></div>
+    {% if user.role == 'author' %}<a class="button" href="{{ url_for('new_article') }}">＋ 新增稿件</a>{% endif %}
+  </div>
+  <p class="intro">{% if user.role == 'author' %}編輯中的稿件可修改、刪除，完成後送出給編輯審查。{% else %}這裡顯示審查中的稿件。請先閱讀內容，再選擇通過或退回。{% endif %}</p>
+  <div class="list-label"><span>共 {{ articles|length }} 篇稿件</span><a href="{{ url_for('index') }}">重新整理</a></div>
+  {% if articles %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>編號</th><th>作者</th><th>類別</th><th class="title-col">標題</th><th>審查狀態</th><th>操作</th></tr></thead>
+      <tbody>
+      {% for article in articles %}
+        <tr>
+          <td class="muted">#{{ article.id }}</td><td>{{ article.author_name }}</td><td>{{ article.category }}</td>
+          <td class="title-col"><a class="article-title" href="{{ url_for('article_detail', article_id=article.id) }}">{{ article.title }}</a></td>
+          <td><span class="status {{ article.status }}">{{ status_labels[article.status] }}</span></td>
+          <td><div class="row-actions">
+            <a href="{{ url_for('article_detail', article_id=article.id) }}">{{ '修改' if user.role == 'author' and article.status == 'editing' else ('查看並審查' if user.role == 'editor' else '查看全文') }}</a>
+            {% if user.role == 'author' and article.status == 'editing' %}
+              <form method="post" action="{{ url_for('article_action', article_id=article.id, action='submit') }}" onsubmit="return confirm('確定送出投稿？送出後須由編輯退回才能修改。')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button" type="submit">送出投稿</button></form>
+              <form method="post" action="{{ url_for('article_action', article_id=article.id, action='delete') }}" onsubmit="return confirm('確定刪除這篇編輯中的稿件？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="link-button danger" type="submit">刪除</button></form>
+            {% endif %}
+          </div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><h2>{{ '還沒有投稿' if user.role == 'author' else '目前沒有待審稿件' }}</h2><p>{{ '點選「新增稿件」，開始撰寫第一篇文章。' if user.role == 'author' else '作者送出投稿後，稿件就會出現在這裡。' }}</p></div>
+  {% endif %}
+{% endblock %}
