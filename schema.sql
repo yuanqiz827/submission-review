@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS review_users (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     username VARCHAR(40) UNIQUE NOT NULL,
     display_name VARCHAR(80) NOT NULL,
-    role VARCHAR(10) NOT NULL CHECK (role IN ('author', 'editor'))
+    role VARCHAR(10) NOT NULL CHECK (role IN ('author', 'editor')),
+    password_hash TEXT
 );
 
 CREATE TABLE IF NOT EXISTS review_articles (
@@ -15,8 +16,13 @@ CREATE TABLE IF NOT EXISTS review_articles (
     status VARCHAR(10) NOT NULL DEFAULT 'editing'
         CHECK (status IN ('editing', 'reviewing', 'approved')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    review_feedback TEXT NOT NULL DEFAULT ''
 );
+
+-- Upgrade existing installations without deleting users or articles.
+ALTER TABLE review_users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE review_articles ADD COLUMN IF NOT EXISTS review_feedback TEXT NOT NULL DEFAULT '';
 
 INSERT INTO review_users (username, display_name, role) VALUES
     ('author1', '作者一', 'author'),

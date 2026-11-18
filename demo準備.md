@@ -1,41 +1,31 @@
-# Demo 準備
+# 登入與意見回饋 Demo
 
-## 展示前
+## 開場
 
-- 開啟 PostgreSQL 服務。
-- PowerShell 切到專案資料夾，執行 python app.py。
-- 瀏覽器開 http://localhost:5000，完成資料庫連線。
-- pgAdmin 開啟 submission_review，準備查詢 review_articles。
-- 用新的展示稿件操作，保留已成功的稿件作備用。
+「依照上次的建議，我補上帳密登入和退回意見回饋。作者與編輯現在用不同帳號登入，角色從資料庫判斷，不能再用選單自由切換。」
 
-## 三到五分鐘流程
+## 展示步驟
 
-1. 開場：「這是使用 Python Flask 和 PostgreSQL 的投稿審查網站，有作者與編輯兩種角色。」
-2. 作者新增稿件：「儲存後是編輯中，可以修改和刪除。」
-3. 作者送出：「送出後變成審查中，作者不能修改或刪除。」
-4. 切換編輯，查看全文，退回：「退回會讓稿件回到編輯中。」
-5. 切回作者修改，再次送出。
-6. 編輯閱讀後通過；切回作者展示已通過。
-7. 切換作者二，展示無法看到作者一稿件。
-8. 另建草稿刪除；在 pgAdmin 查詢稿件，展示資料實際存於 PostgreSQL。
+1. 使用 author1 / Author123! 登入，新增一篇稿件並送出。
+2. 登出，再用 editor1 / Editor123! 登入。
+3. 開稿件，先展示退回意見為必填；沒有意見無法退回。
+4. 輸入「請在第二段補充一個具體例子」，退回修改。
+5. 登出，用 author1 登入，展示清單和內容頁的回饋。
+6. 依意見修改文章，儲存並重新送出。
+7. 用 editor1 登入並通過；再用 author1 展示已通過。
+8. 用 author2 / Author123! 登入，確認看不到 author1 的文章。
+9. 在 pgAdmin 查詢 review_articles，展示 status 與 review_feedback 實際保存。
 
-## 程式如何運作
+## 可以說的話
 
-瀏覽器送出表單 → Flask 的 route 接收資料 → database.py 的 Store 執行參數化 SQL → PostgreSQL 儲存 → Flask 重新導向清單 → Jinja 產生 HTML。
+「退回時，意見和稿件狀態一起存入 PostgreSQL。作者可以看到編輯建議，再修改送出。」
 
-- Python：程式語言。
-- Flask：處理網址與表單，回傳網頁。
-- HTML/CSS：畫面結構與樣式。
-- PostgreSQL：永久儲存使用者與稿件。
-- GET：開啟頁面；POST：送出會改變資料的操作。
-- 外鍵：review_articles.author_id 指向 review_users.id。
-- 交易：成功才提交，失敗回滾。
-- 角色切換：透過選單及 Flask session 保存目前展示身分，尚未做密碼登入。
+「密碼不是直接存明文，而是使用 Werkzeug 的 scrypt 雜湊。登入時驗證密碼，只把使用者編號放進 session，每次操作從資料庫讀取角色。」
 
-若被問是否所有程式都自己寫，依實際情況說明使用 AI 協助，並能解釋自己展示的流程；課程若有 AI 使用規定，依規定辦理。
+「除了隱藏不屬於角色的按鈕，後端也會檢查登入、角色、作者及稿件狀態，不能只改網址就執行其他人的功能。」
 
-## 繳交
+「既有資料庫透過 ALTER TABLE ADD COLUMN IF NOT EXISTS 新增欄位，不需要刪掉原本的稿件。」
 
-GitHub Repository 最外層放 app.py、database.py、schema.sql、requirements.txt、README.md、start.bat、操作說明.md、demo準備.md、.gitignore，以及完整 templates 與 static 資料夾。最後提交 Repository 首頁網址。
+## 目前範圍
 
-若之前已上傳視窗版，這次需要更新 app.py、requirements.txt、README 等檔案，並新增 database.py、templates、static。確認 GitHub 上顯示的是 Flask 版本。
+保存最近一次退回意見，再次退回會更新為新的內容；沒有完整歷次審查紀錄。提供三組展示帳號，沒有註冊與忘記密碼功能。

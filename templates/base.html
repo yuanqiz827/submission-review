@@ -11,7 +11,11 @@
     <div class="header-inner">
       <a class="brand" href="{{ url_for('index') }}">投稿審查系統</a>
       <span class="header-note">期中個人專題</span>
-      <a class="header-link" href="{{ url_for('setup') }}">資料庫連線設定</a>
+      {% if current_user %}
+        <span class="header-link account-label">{{ current_user.display_name }}（{{ '作者' if current_user.role == 'author' else '編輯' }}）</span>
+        {% if current_user.role == 'editor' %}<a class="header-link" href="{{ url_for('setup') }}">連線設定</a>{% endif %}
+        <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="logout-button">登出</button></form>
+      {% endif %}
     </div>
   </header>
   <main class="page {% block page_class %}{% endblock %}">

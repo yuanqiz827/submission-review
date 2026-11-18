@@ -5,6 +5,9 @@
   <a class="back-link" href="{{ url_for('index') }}">← 返回清單</a>
   <div class="heading-row"><h1>{{ '新增稿件' if new else ('修改稿件' if editable else '稿件內容') }}</h1><span class="status {{ article.status }}">{{ status_labels[article.status] }}</span></div>
   <p class="intro">作者：{{ article.author_name }}{% if not new %}　稿件編號：#{{ article.id }}{% endif %}</p>
+  {% if article.review_feedback %}
+    <section class="feedback-box" aria-label="最近一次退回意見"><h2>最近一次退回意見</h2><div class="article-content">{{ article.review_feedback }}</div><p class="muted">請依意見修改後重新投稿。這是最近一次退回的紀錄，再次送出或通過後仍保留。</p></section>
+  {% endif %}
   {% if editable %}
     <form method="post" class="editor-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -18,11 +21,13 @@
     <article class="article-body"><p class="eyebrow">{{ article.category }}</p><h2>{{ article.title }}</h2><div class="article-content">{{ article.content }}</div></article>
     {% if user.role == 'editor' %}
     <div class="review-actions">
-      <p>閱讀完成後，請選擇審查結果。</p>
-      <div class="form-actions">
-        <form method="post" action="{{ url_for('article_action', article_id=article.id, action='approve') }}" onsubmit="return confirm('確定通過這篇稿件？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">通過稿件</button></form>
-        <form method="post" action="{{ url_for('article_action', article_id=article.id, action='return') }}" onsubmit="return confirm('確定退回給作者修改？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary">退回修改</button></form>
-      </div>
+      <h2>審查結果</h2>
+      <form method="post" class="editor-form" action="{{ url_for('article_action', article_id=article.id, action='return') }}" onsubmit="return confirm('確定附上意見並退回給作者修改？')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field"><label for="feedback">退回意見回饋 <span class="label-note">退回時必填，最多 2000 字</span></label><textarea id="feedback" name="feedback" rows="4" maxlength="2000" required placeholder="例如：請補充第二段的具體例子，並修正標題中的錯字。">{{ feedback_draft|default('') }}</textarea></div>
+        <button type="submit" class="secondary">附上意見並退回修改</button>
+      </form>
+      <form class="approve-form" method="post" action="{{ url_for('article_action', article_id=article.id, action='approve') }}" onsubmit="return confirm('確定通過這篇稿件？')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">通過稿件</button></form>
     </div>
     {% else %}<p class="muted">{{ '稿件已送出，等待編輯審查。退回後才能修改。' if article.status == 'reviewing' else '稿件已通過審查，目前為唯讀。' }}</p>{% endif %}
   {% endif %}

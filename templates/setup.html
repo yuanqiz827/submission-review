@@ -4,7 +4,7 @@
 {% block content %}
   <p class="eyebrow">開始使用</p>
   <h1>連線至 PostgreSQL</h1>
-  <p class="intro">輸入你原本的資料庫設定，即可繼續使用已儲存的稿件。</p>
+  <p class="intro">啟動後先連線資料庫，再使用作者或編輯帳密登入。舊資料庫會自動新增登入與回饋欄位，保留既有稿件。</p>
   {% if error %}<div class="notice error" role="alert"><strong>連線未完成</strong><pre>{{ error }}</pre><p>請確認服務已啟動、帳號密碼及連接埠正確。資料庫不存在時，使用下方「首次建立資料庫」。</p></div>{% endif %}
   <form method="post" class="editor-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

@@ -1,109 +1,105 @@
 # 投稿審查系統
 
-期中個人專題
-## 功能
+使用 Python Flask、HTML/CSS 和 PostgreSQL，支援作者投稿、編輯審查、帳密登入與退回意見回饋。
 
-- 作者：查看自己的投稿、新增、修改、刪除編輯中的稿件、送出投稿。
-- 編輯：查看待審清單與全文、通過或退回稿件。
-- 狀態：編輯中（editing）、審查中（reviewing）、已通過（approved）。
-- 退回後可修改再送出；審查中與已通過的稿件無法修改或刪除。
-- PostgreSQL 保存所有稿件，關閉網站後資料仍保留。
-
-## 安裝與執行
-
-需要 Python、PostgreSQL，以及可連線的資料庫帳號。
-
-在這份 README 所在資料夾開啟終端機：
+## 啟動
 
 ```powershell
 python -m pip install -r requirements.txt
 python app.py
 ```
 
-保持終端機開啟，在瀏覽器進入 **http://localhost:5000**。Windows 也可使用 start.bat。
+在瀏覽器開啟 http://localhost:5000，保持終端機執行。Windows 也可使用 start.bat。
 
-網站首頁會進入連線設定，請填寫你自己的 PostgreSQL 設定：
+首次啟動先輸入 PostgreSQL 連線設定。預設 host=localhost、port=5432、資料庫 submission_review、帳號 postgres，密碼請使用自己的資料庫密碼。已有資料庫按「連線並開啟系統」。程式會保留原本資料，新增 password_hash 與 review_feedback 欄位。
 
-| 設定 | 預設值 |
-| --- | --- |
-| 伺服器 | localhost |
-| 連接埠 | 5432 |
-| 資料庫 | submission_review |
-| 帳號 | postgres |
-| 密碼 | 安裝 PostgreSQL 時設定的密碼 |
+之後進入系統登入頁。資料庫連線密碼與下方的網站登入密碼不同。
 
-已有資料庫時按「連線並開啟系統」。第一次使用可按「首次建立資料庫」，帳號需要 CREATEDB 權限。程式會初始化兩張資料表與三個展示身分，不會清空既有稿件。
+## 預設展示帳號
 
-原視窗版使用相同資料表，網站連到相同資料庫即可讀取原本稿件。
+| 角色 | 帳號 | 初始密碼 |
+| --- | --- | --- |
+| 作者一 | author1 | Author123! |
+| 作者二 | author2 | Author123! |
+| 編輯 | editor1 | Editor123! |
 
-結束 demo 時回到終端機按 Ctrl+C。重啟後需要重新輸入資料庫連線設定；資料庫內容仍保留。
+英文大小寫及驚嘆號都要輸入。這些為 localhost 課堂展示用帳號；密碼以 Werkzeug scrypt 雜湊存入 PostgreSQL，不存明文。既有帳號首次升級會設定初始密碼，之後重新連線不會覆蓋已存在的密碼雜湊。
 
-如果 5000 已被其他程式使用，可在 PowerShell 執行：
+網站不再提供身分切換選單。請先按「登出」，再使用另一個帳號登入。登入後的角色從資料庫取得，不能透過表單指定。未登入不能查看稿件。已連線後，只有編輯能開啟資料庫連線設定；重新設定連線後，所有使用者需再次登入。
 
-```powershell
-$env:PORT = "5001"
-python app.py
-```
+## 作者功能
 
-此時開啟 http://localhost:5001。示範時建議保持預設 5000。
+- 只查看自己的投稿清單與完整文章。
+- 新增稿件，填寫類別、標題、文章內容，儲存為編輯中。
+- 修改或刪除自己的編輯中稿件。
+- 送出後變為審查中，不能修改或刪除。
+- 查看編輯的最近一次退回意見，修改後重新送出。
+- 查看已通過稿件。
 
-## 操作流程
+## 編輯功能
 
-1. 選「作者一」，按「切換身分」。
-2. 新增稿件並儲存，清單顯示編輯中。
-3. 送出投稿，狀態改為審查中。
-4. 切換編輯，點「查看並審查」，閱讀後按「退回修改」。
-5. 切回作者，修改並儲存，再次送出。
-6. 編輯通過，切回作者確認已通過。
-7. 另建一篇編輯中稿件測試刪除。
-8. 切到作者二，確認看不到作者一稿件。
-9. 重啟網站並重新連線，確認資料保留。
+- 查看待審稿件清單與完整文章。
+- 填寫退回意見回饋（1～2000 字，空白不算），再退回修改。
+- 退回時，在同一次資料庫操作內儲存意見，將狀態改回編輯中。
+- 直接通過稿件，不要求填寫退回意見。
+
+最近一次退回意見顯示於清單及稿件頁，重新送出、通過後仍保留；再次退回時以新的意見取代。此版本未保存每一輪審查的完整歷史。
+
+## 升級既有資料庫
+
+1. 在舊程式的終端機按 Ctrl+C 停止網站。
+2. 換成新版程式，重新執行 python app.py。
+3. 開網站並重新整理，填原本資料庫設定，按「連線並開啟系統」。
+4. 程式自動執行 schema.sql 與初始化帳密，不清空使用者或稿件。
+5. 用上方展示帳密登入。原本的 author1、author2 稿件仍屬於同一作者。
+
+不需要重建資料庫。schema.sql 可重複執行；初始密碼雜湊由 database.py 建立。
 
 ## 專案結構
 
 ```text
-app.py              Flask 路由、接收表單、角色切換與頁面回應
-database.py         PostgreSQL 存取、交易與狀態規則
-schema.sql          使用者與稿件資料表、主鍵外鍵與限制
-requirements.txt    Python 套件
-start.bat           Windows 啟動入口
-templates/          Jinja HTML 頁面
-static/style.css    網頁樣式
-操作說明.md         詳細操作與排錯
-demo準備.md         展示順序與程式解釋
+app.py                 Flask 路由、登入登出、session、權限檢查與表單
+database.py            PostgreSQL 操作、密碼驗證與交易
+schema.sql             建表及既有資料庫欄位升級
+requirements.txt       Python 套件
+start.bat              Windows 啟動入口
+templates/             HTML 頁面，含 login.html
+static/style.css       網頁樣式
+tests/                 登入、權限與回饋測試
+操作說明.md            操作及排錯
+demo準備.md            展示講稿
 ```
 
-## 路由
+## 資料表
 
-| 網址 | 方法 | 功能 |
-| --- | --- | --- |
-| /setup | GET / POST | 連線頁、初始化資料庫 |
-| / | GET | 作者投稿清單或編輯待審清單 |
-| /identity | POST | 切換展示身分 |
-| /articles/new | GET / POST | 新增稿件 |
-| /articles/編號 | GET / POST | 查看全文或儲存修改 |
-| /articles/編號/submit | POST | 送出投稿 |
-| /articles/編號/delete | POST | 刪除編輯中稿件 |
-| /articles/編號/approve | POST | 通過審查 |
-| /articles/編號/return | POST | 退回修改 |
+- review_users：id、username、display_name、role、password_hash。
+- review_articles：id、author_id、category、title、content、status、review_feedback、created_at、updated_at。
+- author_id 外鍵對應 review_users.id。
+- 狀態 editing＝編輯中、reviewing＝審查中、approved＝已通過。
 
-## 資料庫設計
+SQL 使用參數化查詢。更新、刪除、審查同時檢查作者或角色及目前狀態，操作失敗時交易回滾。session 只記錄使用者編號及驗證版本，不存密碼或由瀏覽器傳入的角色。表單含 CSRF token，Jinja 自動跳脫使用者文字。
 
-review_users 存使用者與角色。review_articles 存稿件，author_id 外鍵對應作者，並保存類別、標題、內容、狀態與時間。
+## 測試
 
-SQL 使用參數傳入資料，更新及刪除時再次檢查角色、作者及狀態；每次操作使用交易，失敗會回滾。表單具 CSRF token，HTML 由 Jinja 自動跳脫。
+```powershell
+python -m unittest discover -s tests -v
+```
 
-在 pgAdmin 的 submission_review 資料庫執行：
+目前 14 項自動測試涵蓋登入、登出、角色越權、作者資料隔離、意見必填、長度、顯示與密碼雜湊驗證。測試使用記憶體替身與模擬資料庫連線，不修改個人資料庫；實際 PostgreSQL 升級及持久化請依操作說明完成驗收。
+
+## 在 pgAdmin 展示
+
+連入 submission_review 後執行：
 
 ```sql
-SELECT a.id, u.display_name AS author, a.category, a.title, a.status
+SELECT a.id, u.username AS author, a.title, a.status, a.review_feedback
 FROM review_articles a
 JOIN review_users u ON u.id = a.author_id
 ORDER BY a.id;
 ```
 
-## 展示版範圍
+## GitHub 繳交
 
-身分透過選單切換，未實作帳號登入驗證。PostgreSQL 密碼只保留在伺服器記憶體，不寫入檔案或瀏覽器 cookie。此版本供 localhost 個人電腦 demo 使用，資料庫設定供同一伺服器的瀏覽器共用。
+更新 app.py、database.py、schema.sql、README.md、操作說明.md、demo準備.md，以及完整 templates、static、tests 資料夾。維持正確資料夾路徑。不要提交個人資料庫密碼、虛擬環境或 PostgreSQL 資料目錄。
 
-GitHub 提交原始碼、templates、static、schema.sql 和說明文件即可。不要提交密碼、虛擬環境或 PostgreSQL 資料目錄。
+這是本機課堂展示版；未包含註冊、忘記密碼、寄信或部署功能。
